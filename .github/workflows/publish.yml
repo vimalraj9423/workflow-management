@@ -1,52 +1,63 @@
-name: Publish Docker image
+name: Publish Docker image and Create Release
 
 on:
   push:
     branches:
-      - main
-    tags:
-      - 'v*.*.*' # Matches version tags like v1.0.0, v2.3.4
+      - main # Trigger the workflow when code is pushed to the main branch
 
 jobs:
-  push_to_registry:
-    name: Push Docker image to Docker Hub
+  version_and_release:
+    name: Build, Push Docker image, and Create Release
     runs-on: ubuntu-latest
     permissions:
+      contents: write # Required for creating a release
       packages: write
-      contents: read
-      attestations: write
       id-token: write
+
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
 
+      - name: Determine Version
+        id: version
+        run: echo "VERSION=v0.0.${{ github.run_number }}" >> $GITHUB_ENV
+
       - name: Log in to Docker Hub
-        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        uses: docker/metadata-action@v4
         with:
           images: vimalraj9423/reactproject
+          tags: |
+            v0.0.${{ github.run_number }}
+            latest
 
       - name: Build and push Docker image
         id: push
-        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: ./Dockerfile
           push: true
           tags: |
-            vimalraj9423/reactproject:${{ github.ref_name }}
+            vimalraj9423/reactproject:v0.0.${{ github.run_number }}
             vimalraj9423/reactproject:latest
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v2
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          subject-name: index.docker.io/vimalraj9423/reactproject
-          subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
+          tag_name: v0.0.${{ github.run_number }}
+          release_name: Release v0.0.${{ github.run_number }}
+          body: |
+            Version v0.0.${{ github.run_number }} has been released.
+            Docker image:
+            - vimalraj9423/reactproject:v0.0.${{ github.run_number }}
+            - vimalraj9423/reactproject:latest
