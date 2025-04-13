@@ -1,18 +1,9 @@
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-# GitHub recommends pinning actions to a commit SHA.
-# To get a newer version, you will need to update the SHA.
-# You can also reference a tag or branch, but the action may change without warning.
-
 name: Publish Docker image
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*.*.*' # Matches version tags like v1.0.0, v2.3.4
 
 jobs:
   push_to_registry:
@@ -46,7 +37,9 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: vimalraj9423/reactproject:${{ github.run_number }}
+          tags: |
+            vimalraj9423/reactproject:${{ github.ref_name }}
+            vimalraj9423/reactproject:latest
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation
