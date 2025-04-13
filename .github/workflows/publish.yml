@@ -34,7 +34,7 @@ jobs:
         with:
           images: vimalraj9423/reactproject
           tags: |
-            v0.0.${{ github.run_number }}
+            ${{ env.VERSION }}
             latest
 
       - name: Build and push Docker image
@@ -45,7 +45,7 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            vimalraj9423/reactproject:v0.0.${{ github.run_number }}
+            vimalraj9423/reactproject:${{ env.VERSION }}
             vimalraj9423/reactproject:latest
           labels: ${{ steps.meta.outputs.labels }}
 
@@ -54,10 +54,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: v0.0.${{ github.run_number }}
-          release_name: Release v0.0.${{ github.run_number }}
+          tag_name: ${{ env.VERSION }}
+          release_name: Release ${{ env.VERSION }}
           body: |
-            Version v0.0.${{ github.run_number }} has been released.
+            Version ${{ env.VERSION }} has been released.
             Docker image:
-            - vimalraj9423/reactproject:v0.0.${{ github.run_number }}
+            - vimalraj9423/reactproject:${{ env.VERSION }}
             - vimalraj9423/reactproject:latest
